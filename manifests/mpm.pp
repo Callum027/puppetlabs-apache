@@ -54,10 +54,8 @@ define apache::mpm (
         }
       }
 
-      if versioncmp($apache_version, '2.4') < 0 {
-        package { "apache2-mpm-${mpm}":
-          ensure => present,
-        }
+      package { "apache2-mpm-${mpm}":
+        ensure => present,
       }
     }
     'freebsd': {
