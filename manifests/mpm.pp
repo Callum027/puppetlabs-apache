@@ -47,6 +47,18 @@ define apache::mpm (
         }
 
         if $mpm == 'itk' {
+            # Hack to get ITK module loading working properly on Ubuntu 14.04 LTS.
+            # The ITK module package on Ubuntu fails to configure properly when the
+            # default MPM (event) is configured.
+            # TODO: remove when this is no longer necessary.
+            if $::operatingsystem == 'Ubuntu' and $::operatingsystemrelease == '14.04' {
+              file { [ "${::apache::mod_enable_dir}/mpm_event.conf", "${::apache::mod_enable_dir}/mpm_event.load" ]:
+                ensure => absent,
+                before => Package["apache2-mpm-${mpm}"],
+                notify => Class['apache::service'],
+              }
+            }
+
             file { "${lib_path}/mod_mpm_itk.so":
               ensure  => link,
               target  => "${lib_path}/mpm_itk.so",
