@@ -48,8 +48,10 @@ define apache::mpm (
 
         if $mpm == 'itk' {
             file { "${lib_path}/mod_mpm_itk.so":
-              ensure => link,
-              target => "${lib_path}/mpm_itk.so"
+              ensure  => link,
+              target  => "${lib_path}/mpm_itk.so",
+              require => Package["apache2-mpm-${mpm}"],
+              notify  => Class['apache::service'],
             }
         }
       }
