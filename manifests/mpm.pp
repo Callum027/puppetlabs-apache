@@ -29,22 +29,26 @@ define apache::mpm (
 
   case $::osfamily {
     'debian': {
-      file { "${::apache::mod_enable_dir}/${mpm}.conf":
-        ensure  => link,
-        target  => "${::apache::mod_dir}/${mpm}.conf",
+      exec { "ln -fs ${::apache::mod_dir}/${mpm}.conf ${::apache::mod_enable_dir}/${mpm}.conf":
+        creates => "${::apache::mod_enable_dir}/${mpm}.conf",
         require => Exec["mkdir ${::apache::mod_enable_dir}"],
         before  => File[$::apache::mod_enable_dir],
         notify  => Class['apache::service'],
-        onlyif  => "which test && test -f ${::apache::mod_dir}/${mpm}.conf",
+        onlyif  => "test -f ${::apache::mod_dir}/${mpm}.conf -o ! -f ${::apache::mod_enable_dir}/${mpm}.conf -o ! -h ${::apache::mod_enable_dir}/${mpm}.conf",
       }
 
-      file { "${::apache::mod_enable_dir}/mpm_${mpm}.conf":
-        ensure  => link,
-        target  => "${::apache::mod_dir}/mpm_${mpm}.conf",
-        require => [ Exec["mkdir ${::apache::mod_enable_dir}"], File["${::apache::mod_enable_dir}/${mpm}.conf"] ],
+      exec { "ln -fs ${::apache::mod_dir}/mpm_${mpm}.conf ${::apache::mod_enable_dir}/${mpm}.conf":
+        creates => "${::apache::mod_enable_dir}/${mpm}.conf",
+        require => Exec["mkdir ${::apache::mod_enable_dir}"],
         before  => File[$::apache::mod_enable_dir],
         notify  => Class['apache::service'],
-        onlyif  => "which test && test -f ${::apache::mod_dir}/mpm_${mpm}.conf -a ! -f ${::apache::mod_dir}/${mpm}.conf",
+        onlyif  => "test ! -f ${::apache::mod_dir}/${mpm}.conf -a \( -f ${::apache::mod_dir}/mpm_${mpm}.conf -o ! -f ${::apache::mod_enable_dir}/${mpm}.conf -o ! -h ${::apache::mod_enable_dir}/${mpm}.conf \)",
+      }
+
+      file { "${::apache::mod_enable_dir}/${mpm}.conf":
+        ensure => link,
+        require => Exec[["ln -fs ${::apache::mod_dir}/${mpm}.conf ${::apache::mod_enable_dir}/${mpm}.conf",
+                     "ln -fs ${::apache::mod_dir}/mpm_${mpm}.conf ${::apache::mod_enable_dir}/${mpm}.conf"]],
       }
 
       if versioncmp($apache_version, '2.4') >= 0 {
