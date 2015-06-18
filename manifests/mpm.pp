@@ -59,6 +59,12 @@ define apache::mpm (
               }
             }
 
+            # The ITK MPM requires the prefork MPM module to be loaded, as well.
+            ::apache::mpm { 'prefork':
+              lib_path       => $lib_path,
+              apache_version => $apache_version,
+            }
+
             file { "${lib_path}/mod_mpm_itk.so":
               ensure  => link,
               target  => "${lib_path}/mpm_itk.so",
