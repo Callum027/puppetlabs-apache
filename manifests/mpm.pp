@@ -35,6 +35,16 @@ define apache::mpm (
         require => Exec["mkdir ${::apache::mod_enable_dir}"],
         before  => File[$::apache::mod_enable_dir],
         notify  => Class['apache::service'],
+        onlyif  => "which test && test -f ${::apache::mod_dir}/${mpm}.conf",
+      }
+
+      file { "${::apache::mod_enable_dir}/mpm_${mpm}.conf":
+        ensure  => link,
+        target  => "${::apache::mod_dir}/mpm_${mpm}.conf",
+        require => [ Exec["mkdir ${::apache::mod_enable_dir}"], File["${::apache::mod_enable_dir}/${mpm}.conf"] ],
+        before  => File[$::apache::mod_enable_dir],
+        notify  => Class['apache::service'],
+        onlyif  => "which test && test -f ${::apache::mod_dir}/mpm_${mpm}.conf -a ! -f ${::apache::mod_dir}/${mpm}.conf",
       }
 
       if versioncmp($apache_version, '2.4') >= 0 {
